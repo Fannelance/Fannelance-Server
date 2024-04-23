@@ -32,14 +32,7 @@ exports.register = async function (req, res, next) {
         .json({ error: `There is already a user with phone number ${phone}` });
     }
 
-    const response = await UserView.registerUser(
-      firstname,
-      lastname,
-      phone,
-      password
-    );
-
-    console.log(response);
+    await UserView.registerUser(firstname, lastname, phone, password);
 
     res
       .status(200)
@@ -64,7 +57,7 @@ exports.checkPhoneNumber = async function (req, res, next) {
 
     const user = await UserView.checkUser(phone);
 
-    const tokenData = { phone: phone, isVerified: false };
+    const tokenData = { phone: phone, isAuth: false };
     const token = await UserView.generateToken(tokenData, SECRET_KEY, "1h");
 
     if (!user) {
@@ -82,7 +75,7 @@ exports.checkPassword = async function (req, res, next) {
   const phone = req.user.phone;
 
   try {
-    const user = await UserModel.findOne({ phone: phone });
+    const user = await UserView.checkUser(phone);
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -92,7 +85,7 @@ exports.checkPassword = async function (req, res, next) {
       return res.status(401).json({ error: "Incorrect password" });
     }
 
-    const tokenData = { phone: user.phone, isVerified: true };
+    const tokenData = { phone: phone, isAuth: true };
     const token = await UserView.generateToken(tokenData, SECRET_KEY, "1h");
 
     res.status(200).json({ status: true, token: token });
@@ -102,24 +95,51 @@ exports.checkPassword = async function (req, res, next) {
   }
 };
 
-exports.updateLocation = async function (req, res, next) {
-  const { latitude, longitude } = req.body;
-  const userId = req.user._id;
+exports.getUserData = async function (req, res, next) {
+  const phone = req.user.phone;
+  const isAuth = req.user.isAuthorized;
 
   try {
-    const user = await UserModel.findOne({ _id: userId });
+    const user = await UserView.checkUser(phone);
+
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    await UserModel.findByIdAndUpdate(userId, {
+    if (!isAuth) {
+      return res.status(401).json({ error: "User not authorized" });
+    }
+
+    res.status(200).json({ status: true, data: user });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+exports.updateLocation = async function (req, res, next) {
+  const { latitude, longitude } = req.body;
+  const phone = req.user.phone;
+
+  try {
+    const user = await UserView.checkUser(phone);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if(!isAuth) {
+      return res.status(401).json({ error: "User not authorized" });
+    }
+
+    await UserModel.findByIdAndUpdate(phone, {
       location: {
         type: "Point",
         coordinates: [parseFloat(longitude), parseFloat(latitude)],
       },
     });
 
-    res.json({ message: "Location updated successfully" });
+    res.status(200).json({ message: "Location updated successfully" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });

@@ -13,6 +13,7 @@ router.post(
   TokenController.verifyToken,
   UserController.checkPassword
 );
+router.get("/user", TokenController.verifyToken, UserController.getUserData);
 router.put(
   "/user/update-location",
   TokenController.verifyToken,
