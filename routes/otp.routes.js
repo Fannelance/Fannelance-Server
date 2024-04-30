@@ -1,6 +1,6 @@
 const router = require("express").Router();
-const OTPController = require("../controller/otp.controller");
-const TokenController = require("../controller/token.controller");
+const OTPController = require("../helpers/otp");
+const TokenController = require("../helpers/token");
 
 router.post(
   "/verify-otp",

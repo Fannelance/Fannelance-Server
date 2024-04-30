@@ -1,7 +1,5 @@
 require("dotenv").config();
 const twilio = require("twilio");
-const TokenController = require("./token.controller");
-const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
 const TWILIO_VERIFY_SERVICE_SID = process.env.TWILIO_VERIFY_SERVICE_SID;

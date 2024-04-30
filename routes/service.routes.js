@@ -1,6 +1,6 @@
 const router = require("express").Router();
 const serviceController = require("../controller/service.controller");
-const TokenController = require("../controller/token.controller");
+const TokenController = require("../helpers/token");
 
 router.get(
   "/services-list",

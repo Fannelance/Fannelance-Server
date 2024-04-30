@@ -27,12 +27,24 @@ const userSchema = new Schema({
     type: String,
     required: [true, "Password is required"],
   },
+  email: {
+    type: String,
+    unique: true,
+    trim: true,
+    required: [true, "Email is required"],
+  },
+  gender: {
+    type: String,
+    trim: true,
+    lowercase: true,
+    enum: ["male", "female"],
+    required: [true, "Gender is required"],
+  },
   location: {
-    type: { type: String, default: "Point" },
-    coordinates: {
-      type: [Number],
-      index: "2dsphere",
-    },
+    type: String,
+    trim: true,
+    lowercase: true,
+    required: [true, "Location is required"],
   },
 });
 
