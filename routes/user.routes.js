@@ -24,6 +24,11 @@ router.put(
   TokenController.verifyToken,
   UserController.updatePassword
 );
+router.put(
+  "/user/reset-password",
+  TokenController.verifyToken,
+  UserController.resetPassword
+);
 router.delete(
   "/user/delete-account",
   TokenController.verifyToken,

@@ -1,4 +1,5 @@
 require("dotenv").config();
+const bcrypt = require("bcrypt");
 const UserView = require("../views/user.views");
 const validator = require("../helpers/validate");
 
@@ -8,10 +9,6 @@ exports.register = async function (req, res, next) {
   try {
     const { firstname, lastname, password, email, gender } = req.body;
     const phone = req.user.phone;
-
-    if (!res.status) {
-      return res.status(400).json({ error: "OTP verification is required" });
-    }
 
     if (!firstname) {
       return res.status(400).json({ error: "First name is required" });
@@ -45,7 +42,14 @@ exports.register = async function (req, res, next) {
         .json({ error: `There is already a user with phone number ${phone}` });
     }
 
-    await UserView.registerUser(firstname, lastname, phone, password);
+    await UserView.registerUser(
+      firstname,
+      lastname,
+      phone,
+      email,
+      gender,
+      password
+    );
 
     res
       .status(200)
@@ -55,10 +59,6 @@ exports.register = async function (req, res, next) {
     res.status(500).json({ error: "Internal server error" });
   }
 };
-
-function isValidPassword(password) {
-  return password.length >= 6;
-}
 
 exports.checkPhoneNumber = async function (req, res, next) {
   try {
@@ -184,8 +184,10 @@ exports.updateLocation = async function (req, res, next) {
 };
 
 exports.updatePassword = async function (req, res, next) {
-  const { oldPassword, newPassword } = req.body;
+  console.log("req.body", req.body);
+  const { oldpassword, newpassword, repeatedpassword } = req.body;
   const phone = req.user.phone;
+  const isAuth = req.user.isAuth;
 
   try {
     const user = await UserView.checkUser(phone);
@@ -198,22 +200,68 @@ exports.updatePassword = async function (req, res, next) {
       return res.status(401).json({ error: "User not authorized" });
     }
 
-    const isMatch = await user.comparePassword(oldPassword);
+    const isMatch = await user.comparePassword(oldpassword);
+
     if (!isMatch) {
-      return res.status(401).json({ error: "Incorrect password" });
+      return res.status(401).json({ error: "Incorrect password." });
     }
 
-    if (!validator.validatePassword(newPassword)) {
+    if (newpassword !== repeatedpassword) {
+      return res.status(400).json({ error: "Passwords do not match" });
+    }
+
+    if (!validator.validatePassword(newpassword)) {
       return res
         .status(400)
-        .json({ error: "Invalid password. Must be at least 6 characters" });
+        .json({ error: "Invalid password. Please, Enter a strong password" });
     }
 
-    await UserView.findByPhoneAndUpdatePassword(phone, newPassword);
+    const hashedNewPassword = await bcrypt.hash(
+      newpassword,
+      await bcrypt.genSalt(10)
+    );
+    await UserView.findByPhoneAndUpdatePassword(phone, hashedNewPassword);
 
     return res
       .status(200)
       .json({ status: true, message: "Password updated successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+exports.resetPassword = async function (req, res, next) {
+  const phone = req.user.phone;
+
+  const { newpassword, repeatedpassword } = req.body;
+  try {
+    const user = await UserView.checkUser(phone);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (newpassword !== repeatedpassword) {
+      return res.status(400).json({ error: "Passwords do not match" });
+    }
+
+    if (!validator.validatePassword(newpassword)) {
+      return res
+        .status(400)
+        .json({ error: "Invalid password. Please, Enter a strong password" });
+    }
+
+    const hashedNewPassword = await bcrypt.hash(
+      newpassword,
+      await bcrypt.genSalt(10)
+    );
+    await UserView.findByPhoneAndUpdatePassword(phone, hashedNewPassword);
+
+    const tokenData = { phone: phone, isAuth: true };
+    const token = await UserView.generateToken(tokenData, SECRET_KEY, "1h");
+
+    return res.status(200).json({ status: true, token: token });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });

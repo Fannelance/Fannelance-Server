@@ -2,12 +2,14 @@ const UserModel = require("../models/user.model");
 const TokenController = require("../helpers/token");
 
 class UserView {
-  static registerUser = async function (firstname, lastname, phone, password) {
+  static registerUser = async function (firstname, lastname, phone, email, gender, password) {
     try {
       const createUser = new UserModel({
         firstname,
         lastname,
+        email,
         phone,
+        gender,
         password,
       });
 
@@ -46,7 +48,7 @@ class UserView {
 
   static findByPhoneAndUpdatePassword = async function (phone, password) {
     try {
-      return await UserModel.findOneAndUpdate(
+      const user = await UserModel.findOneAndUpdate(
         { phone },
         { password: password }
       );

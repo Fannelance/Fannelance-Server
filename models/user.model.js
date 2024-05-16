@@ -39,13 +39,7 @@ const userSchema = new Schema({
     lowercase: true,
     enum: ["male", "female"],
     required: [true, "Gender is required"],
-  },
-  location: {
-    type: String,
-    trim: true,
-    lowercase: true,
-    required: [true, "Location is required"],
-  },
+  }
 });
 
 userSchema.pre("save", async function () {
@@ -59,6 +53,7 @@ userSchema.pre("save", async function () {
 userSchema.methods.comparePassword = async function (userPassword) {
   try {
     const password = await this.get("password");
+    console.log(userPassword);
     const isMatch = await bcrypt.compare(userPassword, password);
 
     return isMatch;
