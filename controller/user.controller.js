@@ -7,7 +7,7 @@ const SECRET_KEY = process.env.jwt_SECRET_KEY;
 
 exports.register = async function (req, res, next) {
   try {
-    const { firstname, lastname, password, email, gender } = req.body;
+    const { firstname, lastname, password, email, gender, location } = req.body;
     const phone = req.user.phone;
 
     if (!firstname) {
@@ -48,7 +48,8 @@ exports.register = async function (req, res, next) {
       phone,
       email,
       gender,
-      password
+      password,
+      location
     );
 
     res

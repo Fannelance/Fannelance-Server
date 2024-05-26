@@ -39,7 +39,22 @@ const userSchema = new Schema({
     lowercase: true,
     enum: ["male", "female"],
     required: [true, "Gender is required"],
-  }
+  },
+  location: {
+    type: {
+      type: String,
+      enum: ["Point"],
+      required: true,
+    },
+    coordinates: {
+      type: [Number],
+      required: true,
+    },
+  },
+  avatar: {
+    data: Buffer,
+    contentType: String,
+  },
 });
 
 userSchema.pre("save", async function () {

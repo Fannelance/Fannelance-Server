@@ -2,7 +2,15 @@ const UserModel = require("../models/user.model");
 const TokenController = require("../helpers/token");
 
 class UserView {
-  static registerUser = async function (firstname, lastname, phone, email, gender, password) {
+  static registerUser = async function (
+    firstname,
+    lastname,
+    phone,
+    email,
+    gender,
+    password,
+    location
+  ) {
     try {
       const createUser = new UserModel({
         firstname,
@@ -11,6 +19,7 @@ class UserView {
         phone,
         gender,
         password,
+        location,
       });
 
       return await createUser.save();
