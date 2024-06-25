@@ -1,9 +1,10 @@
 require("dotenv").config();
 const bcrypt = require("bcrypt");
 const WorkerView = require("../views/worker.views");
+const UserView = require("../views/user.views");
 const validator = require("../helpers/validate");
 
-const SECRET_KEY = process.env.jwt_SECRET_KEY;
+const JWT_SECRET_KEY_WORKER = process.env.JWT_SECRET_KEY_WORKER;
 
 exports.workerRegister = async function (req, res, next) {
   try {
@@ -12,7 +13,7 @@ exports.workerRegister = async function (req, res, next) {
     const { firstname, lastname, password, email, gender, location, jobTitle } =
       req.body;
 
-    const phone = req.user.phone;
+    const phone = req.worker.phone;
 
     if (!firstname) {
       return res.status(400).json({ error: "First name is required" });
@@ -76,11 +77,10 @@ exports.checkWorkerPhone = async function (req, res, next) {
 
     const worker = await WorkerView.checkWorker(phone);
 
-    const tokenData = { phone: phone, isAuth: false };
+    const tokenData = { _id: worker._id, phone: phone, isAuth: false };
     const token = await WorkerView.generateToken(
       tokenData,
-      SECRET_KEY,
-      "30 days"
+      JWT_SECRET_KEY_WORKER
     );
 
     if (!worker) {
@@ -96,7 +96,7 @@ exports.checkWorkerPhone = async function (req, res, next) {
 
 exports.authenticateWorker = async function (req, res, next) {
   const { password } = req.body;
-  const phone = req.user.phone;
+  const phone = req.worker.phone;
 
   try {
     const worker = await WorkerView.checkWorker(phone);
@@ -110,8 +110,11 @@ exports.authenticateWorker = async function (req, res, next) {
       return res.status(401).json({ error: "Incorrect password" });
     }
 
-    const tokenData = { phone: phone, isAuth: true };
-    const token = await WorkerView.generateToken(tokenData, SECRET_KEY, "1h");
+    const tokenData = { _id: worker._id, phone: phone, isAuth: true };
+    const token = await WorkerView.generateToken(
+      tokenData,
+      JWT_SECRET_KEY_WORKER
+    );
 
     res.status(200).json({ status: true, token: token });
   } catch (err) {
@@ -121,13 +124,13 @@ exports.authenticateWorker = async function (req, res, next) {
 };
 
 exports.getWorkerData = async function (req, res, next) {
-  const phone = req.user.phone;
-  const isAuth = req.user.isAuth;
+  const phone = req.worker.phone;
+  const isAuth = req.worker.isAuth;
 
   try {
-    const user = await WorkerView.checkWorker(phone);
+    const worker = await WorkerView.findWorkerByPhone(phone);
 
-    if (!user) {
+    if (!worker) {
       return res.status(404).json({ error: "User not found" });
     }
 
@@ -135,7 +138,7 @@ exports.getWorkerData = async function (req, res, next) {
       return res.status(401).json({ error: "User not authorized" });
     }
 
-    res.status(200).json({ status: true, data: user });
+    res.status(200).json({ status: true, data: worker });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
@@ -143,18 +146,21 @@ exports.getWorkerData = async function (req, res, next) {
 };
 
 exports.findSuitableWorkers = async function (req, res, next) {
-  const location = req.body.location;
-  const jobTitle = req.body.jobTitle;
-  console.log(jobTitle);
+  const phone = req.user.phone;
+  const userLocation = await UserView.getUserLocation(phone);
+  const userCoordinates = userLocation.location.coordinates;
 
   try {
-    const workers = await WorkerView.findSuitableWorkers(location, jobTitle);
+    const workers = await WorkerView.findSuitableWorkers(
+      userCoordinates,
+      "plumber"
+    );
+
+    console.log("workers", workers);
 
     if (!workers) {
       return res.status(404).json({ error: "Worker not found" });
     }
-
-    console.log(workers);
 
     res.status(200).json({ status: true, data: workers });
   } catch (err) {
@@ -164,13 +170,13 @@ exports.findSuitableWorkers = async function (req, res, next) {
 };
 
 exports.deleteWorkerAccount = async function (req, res, next) {
-  const phone = req.user.phone;
-  const isAuth = req.user.isAuth;
+  const phone = req.worker.phone;
+  const isAuth = req.worker.isAuth;
 
   try {
-    const user = await WorkerView.checkWorker(phone);
+    const worker = await WorkerView.checkWorker(phone);
 
-    if (!user) {
+    if (!worker) {
       return res.status(404).json({ error: "User not found" });
     }
 
@@ -178,9 +184,166 @@ exports.deleteWorkerAccount = async function (req, res, next) {
       return res.status(401).json({ error: "User not authorized" });
     }
 
-    const response = await WorkerView.findByPhoneAndDelete(phone);
+    await WorkerView.findByPhoneAndDelete(phone);
 
     return res.status(200).json({ status: true, data: response });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+exports.updateLocation = async function (req, res, next) {
+  const { latitude, longitude } = req.body;
+  const phone = req.worker.phone;
+
+  try {
+    const worker = await WorkerView.checkUser(phone);
+
+    if (!worker) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (!isAuth) {
+      return res.status(401).json({ error: "User not authorized" });
+    }
+
+    await WorkerView.findByPhoneAndUpdateLocation(phone, {
+      location: {
+        type: "Point",
+        coordinates: [parseFloat(longitude), parseFloat(latitude)],
+      },
+    });
+
+    res.status(200).json({ message: "Location updated successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+exports.updatePassword = async function (req, res, next) {
+  const { oldpassword, newpassword, repeatedpassword } = req.body;
+  const phone = req.worker.phone;
+  const isAuth = req.worker.isAuth;
+
+  try {
+    const worker = await WorkerView.checkWorker(phone);
+
+    if (!worker) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (!isAuth) {
+      return res.status(401).json({ error: "User not authorized" });
+    }
+
+    const isMatch = await worker.comparePassword(oldpassword);
+
+    if (!isMatch) {
+      return res.status(401).json({ error: "Incorrect password." });
+    }
+    console.log("newpassword", newpassword);
+    console.log("repeatedpassword", repeatedpassword);
+    if (newpassword !== repeatedpassword) {
+      return res.status(400).json({ error: "Passwords do not match" });
+    }
+
+    if (!validator.validatePassword(newpassword)) {
+      return res
+        .status(400)
+        .json({ error: "Invalid password. Please, Enter a strong password" });
+    }
+
+    const hashedNewPassword = await bcrypt.hash(
+      newpassword,
+      await bcrypt.genSalt(10)
+    );
+    await WorkerView.findByPhoneAndUpdatePassword(phone, hashedNewPassword);
+
+    return res
+      .status(200)
+      .json({ status: true, message: "Password updated successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+exports.resetPassword = async function (req, res, next) {
+  const phone = req.worker.phone;
+
+  const { newpassword, repeatedpassword } = req.body;
+  try {
+    const worker = await WorkerView.checkWorker(phone);
+
+    if (!worker) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (newpassword !== repeatedpassword) {
+      return res.status(400).json({ error: "Passwords do not match" });
+    }
+
+    if (!validator.validatePassword(newpassword)) {
+      return res
+        .status(400)
+        .json({ error: "Invalid password. Please, Enter a strong password" });
+    }
+
+    const hashedNewPassword = await bcrypt.hash(
+      newpassword,
+      await bcrypt.genSalt(10)
+    );
+    await WorkerView.findByPhoneAndUpdatePassword(phone, hashedNewPassword);
+
+    return res
+      .status(200)
+      .json({ status: true, message: "Password has been reset successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+exports.changeRating = async function (req, res, next) {
+  const phone = req.worker.phone;
+  const rating = req.body.rating;
+
+  try {
+    const worker = await WorkerView.checkWorker(phone);
+
+    if (!worker) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    await WorkerView.findByphoneAndUpdateRating(phone, rating);
+
+    return res
+      .status(200)
+      .json({ status: true, message: "Rating updated successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+exports.updateAvialability = async function (req, res, next) {
+  const phone = req.worker.phone;
+  const availability = req.body.availability;
+
+  try {
+    const worker = await WorkerView.checkWorker(phone);
+
+    if (!worker) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    await WorkerView.findByPhoneAndUpdateAvailability(phone, availability);
+
+    return res
+      .status(200)
+      .json({ status: true, message: "Availability updated successfully" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });

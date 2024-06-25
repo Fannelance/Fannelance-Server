@@ -4,7 +4,7 @@ const TokenController = require("../helpers/token");
 
 router.get(
   "/services-list",
-  TokenController.verifyToken,
+  TokenController.verifyUserToken,
   serviceController.fetchServicesList
 );
 

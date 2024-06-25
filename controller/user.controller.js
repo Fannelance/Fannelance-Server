@@ -3,7 +3,7 @@ const bcrypt = require("bcrypt");
 const UserView = require("../views/user.views");
 const validator = require("../helpers/validate");
 
-const SECRET_KEY = process.env.jwt_SECRET_KEY;
+const JWT_SECRET_KEY_USER = process.env.JWT_SECRET_KEY_USER;
 
 exports.register = async function (req, res, next) {
   try {
@@ -42,15 +42,15 @@ exports.register = async function (req, res, next) {
         .json({ error: `There is already a user with phone number ${phone}` });
     }
 
-    await UserView.registerUser(
+    await UserView.registerUser({
       firstname,
       lastname,
       phone,
       email,
       gender,
       password,
-      location
-    );
+      location,
+    });
 
     res
       .status(200)
@@ -71,8 +71,8 @@ exports.checkPhoneNumber = async function (req, res, next) {
 
     const user = await UserView.checkUser(phone);
 
-    const tokenData = { phone: phone, isAuth: false };
-    const token = await UserView.generateToken(tokenData, SECRET_KEY, "1h");
+    const tokenData = { _id: user._id, phone: phone, isAuth: false };
+    const token = await UserView.generateToken(tokenData, JWT_SECRET_KEY_USER);
 
     if (!user) {
       return res.status(401).json({ status: false, token: token });
@@ -99,8 +99,8 @@ exports.checkPassword = async function (req, res, next) {
       return res.status(401).json({ error: "Incorrect password" });
     }
 
-    const tokenData = { phone: phone, isAuth: true };
-    const token = await UserView.generateToken(tokenData, SECRET_KEY, "1h");
+    const tokenData = { _id: user._id, phone: phone, isAuth: true };
+    const token = await UserView.generateToken(tokenData, JWT_SECRET_KEY_USER);
 
     res.status(200).json({ status: true, token: token });
   } catch (err) {
@@ -185,7 +185,6 @@ exports.updateLocation = async function (req, res, next) {
 };
 
 exports.updatePassword = async function (req, res, next) {
-  console.log("req.body", req.body);
   const { oldpassword, newpassword, repeatedpassword } = req.body;
   const phone = req.user.phone;
   const isAuth = req.user.isAuth;
@@ -259,8 +258,8 @@ exports.resetPassword = async function (req, res, next) {
     );
     await UserView.findByPhoneAndUpdatePassword(phone, hashedNewPassword);
 
-    const tokenData = { phone: phone, isAuth: true };
-    const token = await UserView.generateToken(tokenData, SECRET_KEY, "1h");
+    const tokenData = { _id: user._id, phone: phone, isAuth: true };
+    const token = await UserView.generateToken(tokenData, JWT_SECRET_KEY_USER);
 
     return res.status(200).json({ status: true, token: token });
   } catch (err) {

@@ -20,6 +20,14 @@ class WorkerView {
     }
   };
 
+  static findWorkerByPhone = async function (phone) {
+    try {
+      return await WorkerModel.findOne({ phone }, { password: 0 });
+    } catch (error) {
+      throw error;
+    }
+  };
+
   static findSuitableWorkers = async function (userLocation, jobTitle) {
     try {
       return await WorkerModel.aggregate([
@@ -35,7 +43,7 @@ class WorkerView {
             spherical: true,
           },
         },
-        { $project: { password: 0, _id: 0 } },
+        { $project: { password: 0 } },
         {
           $limit: 3,
         },
@@ -70,6 +78,28 @@ class WorkerView {
         { phone },
         { password: password }
       );
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  static findByPhoneAndUpdateAvailability = async function (
+    phone,
+    availability
+  ) {
+    try {
+      return await Worker.findOneAndUpdate(
+        { phone },
+        { is_available: availability }
+      );
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  static findByphoneAndUpdateRating = async function (phone, rate) {
+    try {
+      return await Worker.findOneAndUpdate({ phone }, { rate: rate });
     } catch (error) {
       throw error;
     }

@@ -1,8 +1,9 @@
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
-const SECRET_KEY = process.env.jwt_SECRET_KEY;
+const JWT_SECRET_KEY_USER = process.env.JWT_SECRET_KEY_USER;
+const JWT_SECRET_KEY_WORKER = process.env.JWT_SECRET_KEY_WORKER;
 
-exports.verifyToken = async function (req, res, next) {
+exports.verifyUserToken = async function (req, res, next) {
   const token = req.headers.authorization;
 
   if (!token) {
@@ -10,16 +11,43 @@ exports.verifyToken = async function (req, res, next) {
   }
 
   try {
-    const decoded = jwt.verify(token.replace("Bearer ", ""), SECRET_KEY);
-    console.log("decoded", decoded);
+    const decoded = jwt.verify(
+      token.replace("Bearer ", ""),
+      JWT_SECRET_KEY_USER
+    );
+
     req.user = decoded;
+    
     next();
   } catch (err) {
     return res.status(401).json({ error: "Unauthorized Token" });
   }
 };
 
-exports.generateToken = async function (tokenData, secretKey, jwt_expire) {
+exports.verifyWorkerToken = async function (req, res, next) {
+  const token = req.headers.authorization;
+
+  if (!token) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  try {
+    const decoded = jwt.verify(
+      token.replace("Bearer ", ""),
+      JWT_SECRET_KEY_WORKER
+    );
+    req.worker = decoded;
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: "Unauthorized Token" });
+  }
+};
+
+exports.generateToken = async function (
+  tokenData,
+  secretKey,
+  jwt_expire = "30 days"
+) {
   try {
     const token = jwt.sign(tokenData, secretKey, { expiresIn: jwt_expire });
     return token;

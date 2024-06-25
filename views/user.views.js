@@ -2,25 +2,9 @@ const UserModel = require("../models/user.model");
 const TokenController = require("../helpers/token");
 
 class UserView {
-  static registerUser = async function (
-    firstname,
-    lastname,
-    phone,
-    email,
-    gender,
-    password,
-    location
-  ) {
+  static registerUser = async function (userData) {
     try {
-      const createUser = new UserModel({
-        firstname,
-        lastname,
-        email,
-        phone,
-        gender,
-        password,
-        location,
-      });
+      const createUser = new UserModel(userData);
 
       return await createUser.save();
     } catch (error) {
@@ -57,10 +41,18 @@ class UserView {
 
   static findByPhoneAndUpdatePassword = async function (phone, password) {
     try {
-      const user = await UserModel.findOneAndUpdate(
+      return await UserModel.findOneAndUpdate(
         { phone },
         { password: password }
       );
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  static getUserLocation = async function (phone) {
+    try {
+      return await UserModel.findOne({ phone }, { location: 1 });
     } catch (error) {
       throw error;
     }
