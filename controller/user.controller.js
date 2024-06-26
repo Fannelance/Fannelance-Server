@@ -71,7 +71,7 @@ exports.checkPhoneNumber = async function (req, res, next) {
 
     const user = await UserView.checkUser(phone);
 
-    const tokenData = { _id: user._id, phone: phone, isAuth: false };
+    const tokenData = { phone: phone, isAuth: false };
     const token = await UserView.generateToken(tokenData, JWT_SECRET_KEY_USER);
 
     if (!user) {

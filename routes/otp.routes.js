@@ -5,22 +5,22 @@ const TokenController = require("../helpers/token");
 router.post(
   "/user/verify-otp",
   TokenController.verifyUserToken,
-  OTPController.verifyOTP
+  OTPController.verifyUserOTP
 );
 router.post(
   "/user/send-otp",
   TokenController.verifyUserToken,
-  OTPController.sendOTP
+  OTPController.sendUserOTP
 );
 router.post(
   "/worker/verify-otp",
   TokenController.verifyWorkerToken,
-  OTPController.verifyOTP
+  OTPController.verifyWorkerOTP
 );
 router.post(
   "/worker/send-otp",
   TokenController.verifyWorkerToken,
-  OTPController.sendOTP
+  OTPController.sendWorkerOTP
 );
 
 module.exports = router;
