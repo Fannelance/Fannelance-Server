@@ -2,6 +2,7 @@ require("dotenv").config();
 const bcrypt = require("bcrypt");
 const UserView = require("../views/user.views");
 const validator = require("../helpers/validate");
+const { sendWelcomingMail } = require("../helpers/email");
 
 const JWT_SECRET_KEY_USER = process.env.JWT_SECRET_KEY_USER;
 
@@ -51,8 +52,9 @@ exports.register = async function (req, res, next) {
       password,
       location,
     });
+    await sendWelcomingMail(firstname, email);
 
-    res
+    return res
       .status(200)
       .json({ status: true, message: "User created successfully" });
   } catch (err) {
