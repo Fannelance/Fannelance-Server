@@ -51,10 +51,6 @@ const userSchema = new Schema({
       required: true,
     },
   },
-  avatar: {
-    data: Buffer,
-    contentType: String,
-  },
 });
 
 userSchema.pre("save", async function () {

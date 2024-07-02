@@ -83,19 +83,30 @@ class WorkerView {
     }
   };
 
-  static findByPhoneAndUpdateAvailability = async function (
-    phone,
-    availability
-  ) {
+  static updateWorkerAvailability = async function (workerId, availability) {
     try {
-      return await Worker.findOneAndUpdate(
-        { phone },
+      return await WorkerModel.findOneAndUpdate(
+        { _id: workerId },
         { is_available: availability }
       );
     } catch (error) {
       throw error;
     }
   };
+
+  static async updateWorkersAvailability(workers, availabilityStatus) {
+    try {
+      const workerIds = workers.map((worker) => worker._id);
+
+      await WorkerModel.updateMany(
+        { _id: { $in: workerIds } },
+        { is_available: availabilityStatus }
+      );
+      console.log("Workers' availability updated to:", availabilityStatus);
+    } catch (error) {
+      console.error("Error updating worker availability:", error);
+    }
+  }
 
   static findByphoneAndUpdateRating = async function (phone, rate) {
     try {

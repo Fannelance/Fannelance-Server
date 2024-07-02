@@ -77,7 +77,7 @@ exports.checkWorkerPhone = async function (req, res, next) {
 
     const worker = await WorkerView.checkWorker(phone);
 
-    const tokenData = { _id: worker._id, phone: phone, isAuth: false };
+    const tokenData = { phone: phone, isAuth: false };
     const token = await WorkerView.generateToken(
       tokenData,
       JWT_SECRET_KEY_WORKER
@@ -155,12 +155,6 @@ exports.findSuitableWorkers = async function (req, res, next) {
       userCoordinates,
       "plumber"
     );
-
-    console.log("workers", workers);
-
-    if (!workers) {
-      return res.status(404).json({ error: "Worker not found" });
-    }
 
     res.status(200).json({ status: true, data: workers });
   } catch (err) {
@@ -328,7 +322,7 @@ exports.changeRating = async function (req, res, next) {
   }
 };
 
-exports.updateAvialability = async function (req, res, next) {
+exports.updateAvailability = async function (req, res, next) {
   const phone = req.worker.phone;
   const availability = req.body.availability;
 
@@ -336,10 +330,12 @@ exports.updateAvialability = async function (req, res, next) {
     const worker = await WorkerView.checkWorker(phone);
 
     if (!worker) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(404).json({ error: "Worker not found" });
     }
 
     await WorkerView.findByPhoneAndUpdateAvailability(phone, availability);
+
+    io.emit("workerAvailabilityUpdated", { phone, availability });
 
     return res
       .status(200)
