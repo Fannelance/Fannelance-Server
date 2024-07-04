@@ -20,6 +20,22 @@ class UserView {
     }
   };
 
+  static getUserById = async function (userId) {
+    try {
+      return await UserModel.findOne({ _id: userId }, { password: 0 });
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  static getUserData = async function (phone) {
+    try {
+      return await UserModel.findOne({ phone }, { password: 0 });
+    } catch (error) {
+      throw error;
+    }
+  };
+
   static findByPhoneAndDelete = async function (phone) {
     try {
       return await UserModel.findOneAndDelete({ phone });

@@ -46,4 +46,9 @@ router.delete(
   WorkerController.deleteWorkerAccount
 );
 
+router.get(
+  "/worker/requests",
+  TokenController.verifyWorkerToken,
+  WorkerController.getWorkerRequests
+);
 module.exports = router;

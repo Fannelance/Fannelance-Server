@@ -11,6 +11,7 @@ const server = http.createServer(app);
 const WorkerView = require("./views/worker.views");
 const jwt = require("jsonwebtoken");
 const UserView = require("./views/user.views");
+const RequestView = require("./views/request.views");
 var ObjectId = require("mongoose").Types.ObjectId;
 
 const JWT_SECRET_KEY_USER = process.env.JWT_SECRET_KEY_USER;
@@ -129,16 +130,39 @@ io.on("connection", async (socket) => {
         token.replace("Bearer ", ""),
         JWT_SECRET_KEY_USER
       );
-      const user = await UserView.checkUser(decoded.phone);
+      const user = await UserView.getUserData(decoded.phone);
       socket.broadcast.emit("chosen-worker", workerId);
       const worker = new ObjectId(workerId);
 
       console.log("Request for", workerId);
-      socket.broadcast.emit("request", user);
       await WorkerView.updateWorkerAvailability(worker, false);
+
+      console.log("User data for the request:", user);
+
+      const requestData = {
+        status: "Open",
+        requester: user._id,
+        assigned_to: worker,
+      };
+
+      const request = await RequestView.createRequest(requestData);
+      console.log(request);
+
+      socket.broadcast.emit(`request-${workerId}`, {
+        user: user,
+        request: request,
+      });
     } catch (error) {
       console.error("Error handling selected-worker event:", error);
     }
+  });
+
+  socket.on(`accept-request`, async (request) => {
+    console.log("Request accepted:", request);
+    const requestId = new ObjectId(request._id);
+    await RequestView.updateRequestStatus(requestId, "In Progress");
+
+    socket.broadcast.emit(`request-${request.requester}`);
   });
 
   socket.on("connected-worker", async (token, isAvailable) => {
@@ -147,9 +171,12 @@ io.on("connection", async (socket) => {
       JWT_SECRET_KEY_WORKER
     );
     const workerId = decoded._id;
+    console.log("worker id is", workerId);
 
-    console.log("Worker connected ID:", workerId);
-    if (!isAvailable) socket.broadcast.emit("chosen-worker", workerId);
+    if (!isAvailable) {
+      console.log("Worker connected:", isAvailable);
+      socket.broadcast.emit("chosen-worker", workerId);
+    }
 
     const worker = new ObjectId(decoded._id);
 

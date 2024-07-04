@@ -1,14 +1,12 @@
-// serviceRequestModel.js
 const mongoose = require("mongoose");
+const db = require("../config/db");
+
 const { Schema } = mongoose;
 
-const serviceRequestSchema = new Schema({
+const RequestSchema = new Schema({
   created_date: {
     type: Date,
     default: Date.now,
-  },
-  updated_date: {
-    type: Date,
   },
   status: {
     type: String,
@@ -26,23 +24,8 @@ const serviceRequestSchema = new Schema({
     ref: "workers",
     required: true,
   },
-  
-  // attachments: [
-  //   {
-  //     file_name: {
-  //       type: String,
-  //       required: true,
-  //       maxlength: 255,
-  //     },
-  //     file_url: {
-  //       type: String,
-  //       required: true,
-  //       match: /^https?:\/\/\S+$/,
-  //     },
-  //   },
-  // ],
 });
 
-const ServiceRequest = mongoose.model("ServiceRequest", serviceRequestSchema);
+const RequestModel = db.model("requests", RequestSchema);
 
-module.exports = ServiceRequest;
+module.exports = RequestModel;

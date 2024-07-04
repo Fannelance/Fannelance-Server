@@ -3,6 +3,8 @@ const bcrypt = require("bcrypt");
 const UserView = require("../views/user.views");
 const validator = require("../helpers/validate");
 const { sendWelcomingMail } = require("../helpers/email");
+const RequestView = require("../views/request.views");
+const WorkerView = require("../views/worker.views");
 
 const JWT_SECRET_KEY_USER = process.env.JWT_SECRET_KEY_USER;
 
@@ -264,6 +266,31 @@ exports.resetPassword = async function (req, res, next) {
     const token = await UserView.generateToken(tokenData, JWT_SECRET_KEY_USER);
 
     return res.status(200).json({ status: true, token: token });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+exports.getUserRequests = async function (req, res, next) {
+  const userId = req.user._id;
+  const workers = [];
+
+  try {
+    const requests = await RequestView.getRequestsByUserId(userId);
+    console.log(userId);
+
+    const workerPromises = requests.map(async (request) => {
+      const workerId = request.assigned_to;
+      return await WorkerView.getWorkerById(workerId);
+    });
+
+    const workerDetails = await Promise.all(workerPromises);
+    console.log(workerDetails);
+
+    workerDetails.forEach((worker) => workers.push(worker));
+
+    return res.status(200).json({ status: true, data: workers });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });

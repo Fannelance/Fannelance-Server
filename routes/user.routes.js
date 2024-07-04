@@ -44,5 +44,9 @@ router.get(
   TokenController.verifyUserToken,
   WorkerController.findSuitableWorkers
 );
-
+router.get(
+  "/user/requests",
+  TokenController.verifyUserToken,
+  UserController.getUserRequests
+);
 module.exports = router;

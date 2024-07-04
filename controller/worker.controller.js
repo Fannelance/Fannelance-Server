@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const WorkerView = require("../views/worker.views");
 const UserView = require("../views/user.views");
 const validator = require("../helpers/validate");
+const RequestView = require("../views/request.views");
 
 const JWT_SECRET_KEY_WORKER = process.env.JWT_SECRET_KEY_WORKER;
 
@@ -340,6 +341,30 @@ exports.updateAvailability = async function (req, res, next) {
     return res
       .status(200)
       .json({ status: true, message: "Availability updated successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+exports.getWorkerRequests = async function (req, res, next) {
+  const workerId = req.worker._id;
+  const users = [];
+
+  try {
+    const requests = await RequestView.getRequestsByWorkerId(workerId);
+
+    const userPromises = requests.map(async (request) => {
+      const userId = request.requester;
+      return await UserView.getUserById(userId);
+    });
+
+    const userDetails = await Promise.all(userPromises);
+    console.log(userDetails);
+
+    userDetails.forEach((user) => users.push(user));
+
+    return res.status(200).json({ status: true, data: users });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });

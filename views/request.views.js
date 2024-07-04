@@ -1,14 +1,41 @@
-const ServiceRequestModel = require("../models/request.model");
+const RequestModel = require("../models/request.model");
 
-class requestView {
-  static createRequest = async function (serviceRequestData) {
+class RequestView {
+  static createRequest = async function (requestData) {
     try {
-      const newRequest = new ServiceRequestModel(serviceRequestData);
+      const newRequest = new RequestModel(requestData);
       return await newRequest.save();
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  static updateRequestStatus = async function (requestId, status) {
+    try {
+      return await RequestModel.findByIdAndUpdate(
+        { _id: requestId },
+        { status: status }
+      );
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  static getRequestsByUserId = async function (userId) {
+    try {
+      return await RequestModel.find({ requester: userId });
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  static getRequestsByWorkerId = async function (workerId) {
+    try {
+      return await RequestModel.find({ assigned_to: workerId });
     } catch (error) {
       throw error;
     }
   };
 }
 
-module.exports = requestView;
+module.exports = RequestView;

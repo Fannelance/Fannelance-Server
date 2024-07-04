@@ -28,6 +28,14 @@ class WorkerView {
     }
   };
 
+  static getWorkerById = async function (workerId) {
+    try {
+      return await WorkerModel.findOne({ _id: workerId }, { password: 0 });
+    } catch (error) {
+      throw error;
+    }
+  };
+
   static findSuitableWorkers = async function (userLocation, jobTitle) {
     try {
       return await WorkerModel.aggregate([
