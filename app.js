@@ -58,7 +58,6 @@ io.on("connection", async (socket) => {
             jobTitle
           );
 
-          // Retrieve the last sent workers for this user
           const lastSentWorkers = lastSentWorkersMap.get(userId) || [];
 
           // Find new workers by comparing current and last sent workers

@@ -181,7 +181,9 @@ exports.deleteWorkerAccount = async function (req, res, next) {
 
     await WorkerView.findByPhoneAndDelete(phone);
 
-    return res.status(200).json({ status: true, data: response });
+    return res
+      .status(200)
+      .json({ status: true, message: "Account deleted successfully" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
@@ -356,7 +358,17 @@ exports.getWorkerRequests = async function (req, res, next) {
 
     const userPromises = requests.map(async (request) => {
       const userId = request.requester;
-      return await UserView.getUserById(userId);
+      const user = await UserView.getUserById(userId);
+
+      return {
+        _id: user._id,
+        firstname: user.firstname,
+        lastname: user.lastname,
+        phone: user.phone,
+        email: user.email,
+        gender: user.gender,
+        request_date: request.created_date,
+      };
     });
 
     const userDetails = await Promise.all(userPromises);

@@ -282,7 +282,19 @@ exports.getUserRequests = async function (req, res, next) {
 
     const workerPromises = requests.map(async (request) => {
       const workerId = request.assigned_to;
-      return await WorkerView.getWorkerById(workerId);
+      const worker = await WorkerView.getWorkerById(workerId);
+
+      return {
+        _id: worker._id,
+        firstname: worker.firstname,
+        lastname: worker.lastname,
+        phone: worker.phone,
+        email: worker.email,
+        jobTitle: worker.jobTitle,
+        gender: worker.gender,
+        rate: worker.rate,
+        request_date: request.created_date,
+      };
     });
 
     const workerDetails = await Promise.all(workerPromises);
