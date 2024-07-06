@@ -293,6 +293,7 @@ exports.getUserRequests = async function (req, res, next) {
         jobTitle: worker.jobTitle,
         gender: worker.gender,
         rate: worker.rate,
+        price: worker.price,
         request_date: request.created_date,
       };
     });

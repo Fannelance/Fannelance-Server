@@ -51,4 +51,10 @@ router.get(
   TokenController.verifyWorkerToken,
   WorkerController.getWorkerRequests
 );
+
+router.get(
+  "/worker/wallet",
+  TokenController.verifyWorkerToken,
+  WorkerController.walletBalance
+);
 module.exports = router;

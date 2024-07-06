@@ -11,8 +11,16 @@ exports.workerRegister = async function (req, res, next) {
   try {
     console.log(req.body);
 
-    const { firstname, lastname, password, email, gender, location, jobTitle } =
-      req.body;
+    const {
+      firstname,
+      lastname,
+      password,
+      email,
+      gender,
+      location,
+      jobTitle,
+      price,
+    } = req.body;
 
     const phone = req.worker.phone;
 
@@ -57,6 +65,7 @@ exports.workerRegister = async function (req, res, next) {
       password,
       location,
       jobTitle,
+      price,
     });
 
     res
@@ -377,6 +386,23 @@ exports.getWorkerRequests = async function (req, res, next) {
     userDetails.forEach((user) => users.push(user));
 
     return res.status(200).json({ status: true, data: users });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+exports.walletBalance = async function (req, res, next) {
+  const workerId = req.worker._id;
+
+  try {
+    const worker = await WorkerView.getWorkerById(workerId);
+
+    if (!worker) {
+      return res.status(404).json({ error: "Worker not found" });
+    }
+
+    return res.status(200).json({ status: true, data: worker.wallet });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });

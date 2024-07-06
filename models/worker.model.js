@@ -67,6 +67,14 @@ const workerSchema = new Schema({
     type: Date,
     default: Date.now,
   },
+  wallet: {
+    type: Number,
+    default: 100,
+  },
+  price: {
+    type: Number,
+    required: true,
+  },
 });
 
 workerSchema.pre("save", async function () {

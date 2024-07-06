@@ -31,6 +31,8 @@ app.use("/", serviceRoute);
 app.use("/", OTPRoute);
 app.use("/", workerRoute);
 
+const connectedWorkersMap = new Map(); // To track connected workers and their sockets
+
 io.on("connection", async (socket) => {
   console.log("A user connected:", socket.id);
 
@@ -162,24 +164,61 @@ io.on("connection", async (socket) => {
     await RequestView.updateRequestStatus(requestId, "In Progress");
 
     socket.broadcast.emit(`request-${request.requester}`);
+    await WorkerView.updateWorkerAvailability(
+      new ObjectId(request.assigned_to),
+      true
+    );
   });
 
   socket.on("connected-worker", async (token, isAvailable) => {
-    const decoded = jwt.verify(
-      token.replace("Bearer ", ""),
-      JWT_SECRET_KEY_WORKER
-    );
-    const workerId = decoded._id;
-    console.log("worker id is", workerId);
+    try {
+      const decoded = jwt.verify(
+        token.replace("Bearer ", ""),
+        JWT_SECRET_KEY_WORKER
+      );
+      const workerId = decoded._id;
 
-    if (!isAvailable) {
-      console.log("Worker connected:", isAvailable);
-      socket.broadcast.emit("chosen-worker", workerId);
+      if (!isAvailable) {
+        console.log("Worker connected:", isAvailable);
+        socket.broadcast.emit("chosen-worker", workerId);
+      }
+
+      const worker = new ObjectId(decoded._id);
+      await WorkerView.updateWorkerAvailability(worker, isAvailable);
+
+      // Track the connected worker's socket
+      connectedWorkersMap.set(workerId, socket.id);
+    } catch (error) {
+      console.error("Error handling worker connection:", error);
     }
+  });
 
-    const worker = new ObjectId(decoded._id);
+  // Handle worker disconnection
+  socket.on("disconnect", async () => {
+    // Find the worker associated with this socket
+    const workerEntry = Array.from(connectedWorkersMap.entries()).find(
+      ([_, socketId]) => socketId === socket.id
+    );
 
-    await WorkerView.updateWorkerAvailability(worker, isAvailable);
+    if (workerEntry) {
+      const [workerId, _] = workerEntry;
+      try {
+        // Update worker availability to false
+        const worker = new ObjectId(workerId);
+        await WorkerView.updateWorkerAvailability(worker, false);
+        socket.broadcast.emit("chosen-worker", workerId);
+
+        // Remove the worker from the connected workers map
+        connectedWorkersMap.delete(workerId);
+
+        console.log("Worker disconnected and set to unavailable:", workerId);
+      } catch (error) {
+        console.error(
+          "Error updating worker availability on disconnect:",
+          error
+        );
+      }
+    }
   });
 });
 
