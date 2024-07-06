@@ -408,3 +408,25 @@ exports.walletBalance = async function (req, res, next) {
     res.status(500).json({ error: "Server error" });
   }
 };
+
+exports.deposite = async function (req, res, next) {
+  const workerId = req.worker._id;
+  const amount = req.body.amount;
+
+  try {
+    const worker = await WorkerView.getWorkerById(workerId);
+
+    if (!worker) {
+      return res.status(404).json({ error: "Worker not found" });
+    }
+
+    await WorkerView.deposite(workerId, amount);
+
+    return res
+      .status(200)
+      .json({ status: true, message: "Amount deposited successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Server error" });
+  }
+}

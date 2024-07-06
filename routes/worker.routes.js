@@ -57,4 +57,10 @@ router.get(
   TokenController.verifyWorkerToken,
   WorkerController.walletBalance
 );
+
+router.put(
+  "/worker/deposite",
+  TokenController.verifyWorkerToken,
+  WorkerController.deposite
+);
 module.exports = router;
