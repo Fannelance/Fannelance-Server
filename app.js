@@ -162,6 +162,7 @@ io.on("connection", async (socket) => {
     console.log("Request accepted:", request);
     const requestId = new ObjectId(request._id);
     await RequestView.updateRequestStatus(requestId, "In Progress");
+    await WorkerView.withdraw(request.assigned_to, 10);
 
     socket.broadcast.emit(`request-${request.requester}`);
     await WorkerView.updateWorkerAvailability(

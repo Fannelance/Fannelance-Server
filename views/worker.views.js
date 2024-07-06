@@ -36,6 +36,17 @@ class WorkerView {
     }
   };
 
+  static withdraw = async function (workerId, amount) {
+    try {
+      return await WorkerModel.findOneAndUpdate(
+        { _id: workerId },
+        { $inc: { wallet: -amount } }
+      );
+    } catch (error) {
+      throw error;
+    }
+  };
+
   static deposite = async function (workerId, amount) {
     try {
       return await WorkerModel.findOneAndUpdate(
