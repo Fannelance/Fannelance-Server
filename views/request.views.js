@@ -23,7 +23,10 @@ class RequestView {
 
   static getRequestsByUserId = async function (userId) {
     try {
-      return await RequestModel.find({ requester: userId });
+      return await RequestModel.find({
+        requester: userId,
+        status: "In Progress",
+      });
     } catch (error) {
       throw error;
     }
@@ -31,7 +34,10 @@ class RequestView {
 
   static getRequestsByWorkerId = async function (workerId) {
     try {
-      return await RequestModel.find({ assigned_to: workerId });
+      return await RequestModel.find({
+        assigned_to: workerId,
+        status: "In Progress",
+      });
     } catch (error) {
       throw error;
     }

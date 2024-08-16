@@ -70,7 +70,7 @@ exports.workerRegister = async function (req, res, next) {
 
     res
       .status(200)
-      .json({ status: true, message: "User created successfully" });
+      .json({ status: true, message: "Worker registered successfully" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Internal server error" });
@@ -429,4 +429,4 @@ exports.deposite = async function (req, res, next) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
   }
-}
+};
