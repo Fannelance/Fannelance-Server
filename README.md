@@ -7,6 +7,7 @@ Fannelance is a Flutter and Node.js application that provides maintenance servic
 - [Installation](#installation)
 - [Prerequisites](#prerequisites)
 - [Usage](#usage)
+- [System Design](#system-design)
 - [Documentaion](#fannelance-api-documentation)
 
 ## Installation
@@ -53,6 +54,14 @@ Fannelance is a Flutter and Node.js application that provides maintenance servic
    ```
 
 2. The server will be running on `http://localhost:3000`.
+
+# System Design
+
+## Reqeust Design
+
+<section id="request" align=center>
+  <img src="./screens/request.png" width=500/>
+</section>
 
 # Fannelance API Documentation
 
